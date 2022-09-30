@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:youtube_api/youtube_api.dart';
 
 import '../global.dart';
@@ -13,7 +14,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   TextEditingController searchController = TextEditingController();
 
-  static String key = "AIzaSyAypUx1EfcnBZqMnqi35CpF1ggrve3WyVM";
+  static String key = "Your API Key";
   YoutubeAPI youtube = YoutubeAPI(key);
   List<YouTubeVideo> videoResult = [];
 
@@ -24,6 +25,19 @@ class _SearchPageState extends State<SearchPage> {
       videoDuration: 'any',
     );
     videoResult = await youtube.nextPage();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadData();
+  }
+
+  loadData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Global.searchList = prefs.getStringList("searchList") ?? [];
     setState(() {});
   }
 
@@ -47,18 +61,24 @@ class _SearchPageState extends State<SearchPage> {
                 Expanded(
                   child: TextField(
                     onTap: () {
-                      on = !on;
+                      setState(() {
+                        on = true;
+                      });
                     },
                     controller: searchController,
-                    onSubmitted: (val) {
+                    onSubmitted: (val) async {
+                      SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                      on = false;
                       Global.searchList.add(searchController.text);
+                      Global.searchList = Global.searchList.toSet().toList();
+
+                      prefs.setStringList("searchList", Global.searchList);
                       callAPI();
                       setState(() {});
                     },
                     decoration: const InputDecoration(
                       hintText: "Search YouTube",
-                      contentPadding: EdgeInsets.zero,
-                      prefixIcon: Icon(Icons.search),
                     ),
                   ),
                 ),
@@ -72,20 +92,19 @@ class _SearchPageState extends State<SearchPage> {
               child: (on)
                   ? ListView.builder(
                       itemBuilder: (context, i) {
-                        return Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.history),
-                              const Spacer(),
-                              Text(
-                                "${Global.searchList[i]}",
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              const Spacer(),
-                              const Icon(Icons.arrow_upward_outlined),
-                            ],
+                        return ListTile(
+                          onTap: () {
+                            on = false;
+                            searchController.text = Global.searchList[i];
+                            callAPI();
+                            setState(() {});
+                          },
+                          leading: const Icon(Icons.history),
+                          title: Text(
+                            Global.searchList[i],
+                            style: const TextStyle(fontSize: 18),
                           ),
+                          trailing: const Icon(Icons.arrow_upward_outlined),
                         );
                       },
                       itemCount: Global.searchList.length,
@@ -108,46 +127,43 @@ class _SearchPageState extends State<SearchPage> {
         setState(() {});
         Navigator.of(context).pushNamed("player_page");
       },
-      child: Card(
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 7.0),
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 20.0),
-                child: Image.network(
-                  video.thumbnail.small.url ?? '',
-                  width: 120.0,
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.2),
+              image: DecorationImage(
+                image: NetworkImage("${video.thumbnail.high.url}"),
+                fit: BoxFit.cover,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      video.title,
-                      softWrap: true,
-                      style: TextStyle(fontSize: 18.0, color: Colors.grey[500]),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3.0),
-                      child: Text(
-                        video.channelTitle,
-                        softWrap: true,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
+            height: MediaQuery.of(context).size.height * 0.25,
           ),
-        ),
+          Padding(
+            padding:
+                const EdgeInsets.only(right: 15, left: 15, top: 5, bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  video.title,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black),
+                ),
+                Text(
+                  video.channelTitle,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.black.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

@@ -10,7 +10,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool typing = false;
-  static String key = "AIzaSyAypUx1EfcnBZqMnqi35CpF1ggrve3WyVM";
+  static String key = "Your API Key";
   String header = "What are You looking for?";
 
   YoutubeAPI youtube = YoutubeAPI(key);
@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> callAPI() async {
     videoResult = await youtube.search(
-      TextBox.ytsearch.text,
+      "trending",
       order: 'relevance',
       videoDuration: 'any',
     );
@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage> {
   Widget listItem(YouTubeVideo video) {
     return GestureDetector(
       onTap: () {
+        Global.data = video;
         Global.id = video.id.toString();
         Navigator.of(context).pushNamed("player_page");
       },
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: Colors.grey.withOpacity(0.2),
               image: DecorationImage(
-                image: NetworkImage("${video.thumbnail.high.url}" ?? ''),
+                image: NetworkImage("${video.thumbnail.high.url}"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -124,6 +125,7 @@ class _HomePageState extends State<HomePage> {
             padding:
                 const EdgeInsets.only(right: 15, left: 15, top: 5, bottom: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   video.title,
@@ -143,26 +145,6 @@ class _HomePageState extends State<HomePage> {
             ),
           )
         ],
-      ),
-    );
-  }
-}
-
-class TextBox extends StatelessWidget {
-  static TextEditingController ytsearch = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.centerLeft,
-      color: Colors.grey[850],
-      child: Padding(
-        padding: const EdgeInsets.only(right: 50),
-        child: TextField(
-          decoration: const InputDecoration(
-              border: InputBorder.none, hintText: 'Search'),
-          controller: ytsearch,
-        ),
       ),
     );
   }

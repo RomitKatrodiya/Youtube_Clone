@@ -4,7 +4,8 @@ import 'package:viva_1_master_flutter/screens/home_page.dart';
 import 'package:viva_1_master_flutter/screens/player_page.dart';
 import 'package:viva_1_master_flutter/screens/search_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
